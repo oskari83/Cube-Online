@@ -39,8 +39,8 @@
      <Compile Include="Assets/Scripts/GameLogic.cs" />
      <Compile Include="Assets/Scripts/Player.cs" />
      <Compile Include="Assets/Scripts/Multiplayer/NetworkManager.cs" />
-     <Compile Include="Assets/Scripts/TestScript.cs" />
      <Compile Include="Assets/Scripts/Multiplayer/MessageExtensions.cs" />
+     <Compile Include="Assets/Scripts/PlayerMovement.cs" />
      <None Include="Assets/Scripts/Multiplayer/RiptideNetworking.xml" />
     <Reference Include="UnityEngine">
         <HintPath>/Applications/Unity/Hub/Editor/2020.3.22f1/Unity.app/Contents/Managed/UnityEngine/UnityEngine.dll</HintPath>

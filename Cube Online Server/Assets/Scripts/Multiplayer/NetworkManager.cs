@@ -4,10 +4,14 @@ using UnityEngine;
 
 public enum ServerToClientId : ushort {
     playerSpawned = 1,
+    playerMovement = 2,
 }
+
 public enum ClientToServerId : ushort{
     name = 1,
+    input = 2,
 }
+
 public class NetworkManager : MonoBehaviour
 {
     private static NetworkManager _singleton;

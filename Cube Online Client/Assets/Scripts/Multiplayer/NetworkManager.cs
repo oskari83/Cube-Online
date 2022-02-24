@@ -7,10 +7,12 @@ using UnityEngine;
 
 public enum ServerToClientId : ushort {
     playerSpawned = 1,
+    playerMovement = 2,
 }
 
 public enum ClientToServerId : ushort{
     name = 1,
+    input = 2,
 }
 public class NetworkManager : MonoBehaviour
 {
@@ -34,6 +36,8 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private string ip;
     [SerializeField] private ushort port;
 
+    private bool connectionOn = false;
+
     private void Awake(){
         Singleton = this;
     }
@@ -49,6 +53,8 @@ public class NetworkManager : MonoBehaviour
 
     private void FixedUpdate(){
         Client.Tick();
+        if(connectionOn==true)
+            Debug.Log(Client.RTT);
     }
 
     private void OnApplicationQuit(){
@@ -61,6 +67,7 @@ public class NetworkManager : MonoBehaviour
 
     private void DidConnect(object sender, EventArgs e){
         UIManager.Singleton.SendName();
+        connectionOn = true;
     }
 
     private void FailedToConnect(object sender, EventArgs e){
@@ -74,5 +81,6 @@ public class NetworkManager : MonoBehaviour
 
     private void DidDisconnect(object sender, EventArgs e){
         UIManager.Singleton.BackToMain();
+        connectionOn = false;
     }
 }
