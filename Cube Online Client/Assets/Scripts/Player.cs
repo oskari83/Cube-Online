@@ -40,8 +40,6 @@ public class Player : MonoBehaviour
             player.IsLocal = false;
         }
 
-        Debug.Log("here");
-
         player.name = $"Player {id} ({(string.IsNullOrEmpty(username) ? "Guest" : username)})";
         player.Id = id;
         player.username = username;
@@ -51,7 +49,6 @@ public class Player : MonoBehaviour
 
     [MessageHandler((ushort)ServerToClientId.playerSpawned)]
     private static void SpawnPlayer(Message message){
-        Debug.Log("here");
         Spawn(message.GetUShort(), message.GetString(), message.GetVector3());
     }
 
@@ -59,6 +56,10 @@ public class Player : MonoBehaviour
     private static void PlayerMovement(Message message){
         if(list.TryGetValue(message.GetUShort(), out Player player)){
             player.Move(message.GetVector3());
+            int t = message.GetInt();
+            int s = message.GetUShort();
+            ushort b = message.GetUShort();
+            //Debug.Log($"T: {t}, S: {s}, B: {b}");
         }
     }
 }

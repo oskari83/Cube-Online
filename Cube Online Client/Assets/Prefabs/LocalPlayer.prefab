@@ -127,6 +127,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8de32021e67a74264a04f60819d88b63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lerpAmount: 15
 --- !u!114 &7212287307479885928
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139,6 +140,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ea9f9a5735f77488a894a8bb4d20d7d0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  latencyOn: 1
+  minimumLatency: 1
+  maximumLatency: 1.5
+  packetLossChance: 0.2
 --- !u!1 &2821324811622655039
 GameObject:
   m_ObjectHideFlags: 0

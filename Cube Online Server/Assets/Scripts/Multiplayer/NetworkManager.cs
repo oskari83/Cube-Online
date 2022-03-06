@@ -34,6 +34,8 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private ushort port;
     [SerializeField] private ushort maxClientCount;
 
+    public int tickN = 0;
+
     private void Awake(){
         Singleton = this;
     }
@@ -48,6 +50,7 @@ public class NetworkManager : MonoBehaviour
 
     private void FixedUpdate(){
         Server.Tick();
+        tickN++;
     }
 
     private void OnApplicationQuit(){

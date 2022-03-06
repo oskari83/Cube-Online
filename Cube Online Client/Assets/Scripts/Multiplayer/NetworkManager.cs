@@ -53,8 +53,8 @@ public class NetworkManager : MonoBehaviour
 
     private void FixedUpdate(){
         Client.Tick();
-        if(connectionOn==true)
-            Debug.Log(Client.RTT);
+        //if(connectionOn==true)
+            //Debug.Log(Client.RTT);
     }
 
     private void OnApplicationQuit(){

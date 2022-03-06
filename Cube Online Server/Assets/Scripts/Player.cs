@@ -1,4 +1,5 @@
 using RiptideNetworking;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -49,11 +50,12 @@ public class Player : MonoBehaviour
     [MessageHandler((ushort)ClientToServerId.name)]
     private static void Name(ushort fromClientId, Message message){
         Spawn(fromClientId, message.GetString());
-    } 
+    }
 
     [MessageHandler((ushort)ClientToServerId.input)]
     private static void Input(ushort fromClientId, Message message){
-        if (list.TryGetValue(fromClientId, out Player player))
+        if (list.TryGetValue(fromClientId, out Player player)){
             player.Movement.SetInput(message.GetBools(5));
+        }
     }
 }
