@@ -9,44 +9,42 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Player player;
     [SerializeField] private float movementSpeed;
     [SerializeField] private float jumpSpeed = 500f;
-    [SerializeField] bool latencyOn = true;
+    //[SerializeField] bool latencyOn = true;
 
     private float moveSpeed;
 
     private bool[] inputs;
     private bool[] bufferInputs;
     private float yVelocity;
+    private Rigidbody rb;
 
-    private Buffer buffer = new Buffer(5);
+    private Buffer buffer = new Buffer();
     private LagSimulator lagSim = new LagSimulator(0f,0f,0.25f);
 
     private void OnValidate(){
         if(player == null){
             player = GetComponent<Player>();
         }
-
-        Initialize();
     }
 
     private void Start(){
-        Initialize();
-        inputs = new bool[5];
-        bufferInputs = new bool[5];
+        if(rb == null){
+            rb = gameObject.GetComponent<Rigidbody>();
+        }
+        inputs = new bool[4];
+        bufferInputs = new bool[4];
     }
 
     private void FixedUpdate(){
         buffer.incrementTick();
-        buffer.setInputs(inputs);
-        if(buffer.getTick()==5){
-            bufferInputs = buffer.getInputs();
+        buffer.addInput(Tools.BoolsToByte(inputs));
+
+        Move(inputs);
+        SendMovement(buffer.getBuffer());
+        if(buffer.getPosTick()==25){
+            buffer.setPosTick(0);
+            SendMovementPos();
         }
-        Move(bufferInputs);
-
-        SendMovement();
-    }
-
-    private void Initialize(){
-        moveSpeed = movementSpeed * Time.fixedDeltaTime;
     }
 
     private void Move(bool[] inputss){
@@ -59,27 +57,39 @@ public class PlayerMovement : MonoBehaviour
             inputDirection.z -= 1;
         if(inputss[3])
             inputDirection.x -= 1;
-        inputDirection *= moveSpeed;
+        inputDirection *= (movementSpeed * Time.fixedDeltaTime);
 
+        /*
         if(inputss[4]){
-            gameObject.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpSpeed);
+            rb.AddForce(Vector3.up * jumpSpeed);
         }
+        */
 
-        transform.Translate(inputDirection);
+        rb.AddForce(inputDirection);
     } 
 
     public void SetInput(bool[] inputs){
-        Debug.Log(Converter.BoolsToString(inputs));
+        Debug.Log(Tools.BoolsToString(inputs));
         this.inputs = inputs;
     }
 
-    private void SendMovement(){
+    private void SendMovement(byte[] inputs){
         Message message = Message.Create(MessageSendMode.unreliable, ServerToClientId.playerMovement);
         message.AddUShort(player.Id);
         message.AddVector3(transform.position);
-        message.AddInt(NetworkManager.Singleton.tickN);
+        message.AddBytes(inputs,false);
         message.AddUShort(buffer.getTick());
-        message.AddUShort(buffer.getBatchTick());
         NetworkManager.Singleton.Server.SendToAll(message);
     }
+
+    private void SendMovementPos(){
+        Message message = Message.Create(MessageSendMode.unreliable, ServerToClientId.playerMovementPos);
+        message.AddUShort(player.Id);
+        message.AddVector3(transform.position);
+        message.AddVector3(rb.velocity);
+        message.AddUShort(buffer.getTick());
+        NetworkManager.Singleton.Server.SendToAll(message);
+    }
+
+    //todo move ticks to networkmanager so they are global, keep only input bytes here
 }

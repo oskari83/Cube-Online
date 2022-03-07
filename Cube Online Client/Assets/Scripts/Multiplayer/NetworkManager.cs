@@ -8,6 +8,7 @@ using UnityEngine;
 public enum ServerToClientId : ushort {
     playerSpawned = 1,
     playerMovement = 2,
+    playerMovementPos = 3,
 }
 
 public enum ClientToServerId : ushort{
@@ -36,7 +37,7 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private string ip;
     [SerializeField] private ushort port;
 
-    private bool connectionOn = false;
+    //private bool connectionOn = false;
 
     private void Awake(){
         Singleton = this;
@@ -67,7 +68,7 @@ public class NetworkManager : MonoBehaviour
 
     private void DidConnect(object sender, EventArgs e){
         UIManager.Singleton.SendName();
-        connectionOn = true;
+        //connectionOn = true;
     }
 
     private void FailedToConnect(object sender, EventArgs e){
@@ -81,6 +82,6 @@ public class NetworkManager : MonoBehaviour
 
     private void DidDisconnect(object sender, EventArgs e){
         UIManager.Singleton.BackToMain();
-        connectionOn = false;
+        //connectionOn = false;
     }
 }

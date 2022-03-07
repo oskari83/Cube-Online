@@ -5,6 +5,7 @@ using UnityEngine;
 public enum ServerToClientId : ushort {
     playerSpawned = 1,
     playerMovement = 2,
+    playerMovementPos = 3,
 }
 
 public enum ClientToServerId : ushort{

@@ -13,11 +13,10 @@ public class PlayerController : MonoBehaviour{
 
     private bool[] inputs;
     private LagSimulator latSim;
-    private IEnumerator coroutine;
 
     private void Start(){
         latSim = new LagSimulator(minimumLatency,maximumLatency,packetLossChance);
-        inputs = new bool[5];
+        inputs = new bool[4];
     }
 
     private void Update(){
@@ -29,8 +28,9 @@ public class PlayerController : MonoBehaviour{
             inputs[2] = true;
         if(Input.GetKeyDown(KeyCode.D))
             inputs[3] = true;
-        if(Input.GetKeyDown(KeyCode.Space))
-            inputs[4] = true;
+    
+        //if(Input.GetKeyDown(KeyCode.Space))
+            //inputs[4] = true;
 
         if(Input.GetKeyUp(KeyCode.W))
             inputs[0] = false;
@@ -40,8 +40,8 @@ public class PlayerController : MonoBehaviour{
             inputs[2] = false;
         if(Input.GetKeyUp(KeyCode.D))
             inputs[3] = false;
-        if(Input.GetKeyUp(KeyCode.Space))
-            inputs[4] = false;
+        //if(Input.GetKeyUp(KeyCode.Space))
+            //inputs[4] = false;
     }
 
     private void FixedUpdate(){
@@ -56,8 +56,8 @@ public class PlayerController : MonoBehaviour{
 
     private void SendInput(){
         Message message = Message.Create(MessageSendMode.unreliable, ClientToServerId.input);
-        Debug.Log(Converter.BoolsToString(inputs));
-        message.AddBools(inputs, false);
+        //Debug.Log(Tools.BoolsToString(inputs));
+        message.AddByte(Tools.BoolsToByte(inputs));
         NetworkManager.Singleton.Client.Send(message);
     }
 }

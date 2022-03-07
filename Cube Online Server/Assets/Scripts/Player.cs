@@ -55,7 +55,7 @@ public class Player : MonoBehaviour
     [MessageHandler((ushort)ClientToServerId.input)]
     private static void Input(ushort fromClientId, Message message){
         if (list.TryGetValue(fromClientId, out Player player)){
-            player.Movement.SetInput(message.GetBools(5));
+            player.Movement.SetInput(Tools.ByteToBools(message.GetByte()));
         }
     }
 }

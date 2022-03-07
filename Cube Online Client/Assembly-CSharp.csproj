@@ -43,9 +43,9 @@
      <Compile Include="Assets/Scripts/Multiplayer/NetworkManager.cs" />
      <Compile Include="Assets/Scripts/TestScript.cs" />
      <Compile Include="Assets/Scripts/Multiplayer/MessageExtensions.cs" />
-     <Compile Include="Assets/Scripts/PController10HZ.cs" />
-     <Compile Include="Assets/Scripts/LagSimulator.cs" />
-     <Compile Include="Assets/Scripts/Utilities/Converter.cs" />
+     <Compile Include="Assets/Scripts/Utilities/PController10HZ.cs" />
+     <Compile Include="Assets/Scripts/Utilities/LagSimulator.cs" />
+     <Compile Include="Assets/Scripts/Utilities/Tools.cs" />
      <None Include="Assets/Scripts/Multiplayer/RiptideNetworking.xml" />
     <Reference Include="UnityEngine">
         <HintPath>/Applications/Unity/Hub/Editor/2020.3.22f1/Unity.app/Contents/Managed/UnityEngine/UnityEngine.dll</HintPath>
