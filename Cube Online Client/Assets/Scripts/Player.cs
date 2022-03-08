@@ -9,20 +9,29 @@ public class Player : MonoBehaviour{
     public ushort Id {get; private set; }
     public bool IsLocal {get; private set; }
     
+    [SerializeField] private float movementSpeed = 500f;
+    [SerializeField] private bool lerpConstantly = true;
     [SerializeField] private int lerpAmount = 15;
-    [SerializeField] private float movementSpeed;
+
     private string username;
 
     private Transform normalCube;
     private Transform lerpCube;
-    private ushort clientTick = 10;
-    private ushort newestTick = 10;
-    private bool newQueueRequired = true;
 
-    private Queue<(byte,ushort)> MyQueue = new Queue<(byte,ushort)>();
+    private int clientTick = 0;
+    private int newestTick = 0;
+    private bool newQueueRequired = true;
+    private Queue<(byte,int)> MyQueue = new Queue<(byte,int)>();
+
     private Vector3 latencyStorePos;
     private Vector3 latencyStoreVel;
-    private ushort executeOnTick;
+    private int executeOnTick;
+    private bool needToMoveToPos = true;
+
+    private int ticksBehind;
+    private Queue<int> TickSum = new Queue<int>();
+    private float averageTicksBehind;
+    private int currentTickSum;
 
     private void Start(){
         normalCube = this.gameObject.transform.GetChild(0);
@@ -30,76 +39,106 @@ public class Player : MonoBehaviour{
     }
 
     private void OnDestroy(){
-        list.Remove(Id);
+        list.Remove(Id); 
     }
 
     private void FixedUpdate(){
-        if(newQueueRequired==false){
-            clientTick++;
-        }
-        if(clientTick==executeOnTick){
-            MoveWithPosLatencyIncluded();
-        }
+        if (newQueueRequired)
+            needToMoveToPos=true;
+        clientTick++;
 
-        if(MyQueue.Count!=0){
-            bool[] executingInputs = GetFromQueue();
-            Vector3 inputDirection = Vector3.zero;
-            if(executingInputs[0])
-                inputDirection.z += 1;
-            if(executingInputs[1])
-                inputDirection.x += 1;
-            if(executingInputs[2])
-                inputDirection.z -= 1;
-            if(executingInputs[3])
-                inputDirection.x -= 1;
-            inputDirection *= (movementSpeed * Time.fixedDeltaTime);
-            lerpCube.gameObject.GetComponent<Rigidbody>().AddForce(inputDirection);
+        if(clientTick==executeOnTick){
+            if(lerpConstantly){
+                MoveWithPosLatencyIncluded();
+            }else if(needToMoveToPos){
+                MoveWithPosLatencyIncluded();
+                needToMoveToPos=false;
+            }
+        }
+        MovePlayerOnScreen();
+    }
+
+    private void MovePlayerOnScreen(){
+        bool[] executingInputs = GetFromQueue();
+        Vector3 inputDirection = Vector3.zero;
+        if(executingInputs[0])
+            inputDirection.z += 1;
+        if(executingInputs[1])
+            inputDirection.x += 1;
+        if(executingInputs[2])
+            inputDirection.z -= 1;
+        if(executingInputs[3])
+            inputDirection.x -= 1;
+        inputDirection *= (movementSpeed * Time.fixedDeltaTime);
+        lerpCube.gameObject.GetComponent<Rigidbody>().AddForce(inputDirection);
+    }
+
+    private void AddToTickSum(int behind){
+        int adjustedBehind = behind -5;
+        if(TickSum.Count<50){
+            currentTickSum += adjustedBehind;
+            TickSum.Enqueue(adjustedBehind);
+        }else{
+            currentTickSum -= TickSum.Peek();
+            TickSum.Dequeue();
+            currentTickSum += adjustedBehind;
+            TickSum.Enqueue(adjustedBehind);
         }
     }
 
-    private void AddToQueue(byte[] inputss, ushort t){
-        Debug.Log("adding on server-tick: " + t.ToString() +"  client-tick: " + clientTick.ToString());
+    private float getAverageTickSum(){
+        return (currentTickSum / 50f);
+    }
+
+    private void AddToQueue(byte[] inputss, int t){
+        //Debug.Log("adding on server-tick: " + t.ToString() +"  newest-tick: " + newestTick.ToString() +"  client-tick: " + clientTick.ToString());
         if(newQueueRequired){
-            MyQueue = new Queue<(byte,ushort)>();
-            clientTick = (ushort)(t-4-1);
+            MyQueue = new Queue<(byte,int)>();
+            clientTick = (t-5);
             newestTick = t;
             for(int i=4; i>-1; i--){
-                MyQueue.Enqueue((inputss[i],(ushort)(t-i)));
+                MyQueue.Enqueue((inputss[i],(t-i)));
             }
             newQueueRequired = false;
         }else{
-            if(t>newestTick+1){
-                ushort delta = (ushort)(t-newestTick);
-                if (delta>5){
-                    return;
-                }else{
-                    for(int i=delta-1; i>-1; i--){
-                        MyQueue.Enqueue((inputss[i],(ushort)(t-i)));
-                    }
-                }
-            }else if (t==newestTick+1){
+            int delta = (t-newestTick);
+            if(delta>5 || delta <1){
+                return;
+            }else if (delta==1){
                 MyQueue.Enqueue((inputss[0],t));
                 newestTick = t;
             }else{
-                return;
+                for(int i=delta-1; i>-1; i--){
+                    MyQueue.Enqueue((inputss[i],(t-i)));
+                }
+                newestTick = t;
             }
         }
+
+        //so if we are running on average more than 7 ticks behind (2 behind), or only 3 ticks behind (so 2 forward), adjust again
+        ticksBehind = t-clientTick;
+        AddToTickSum(ticksBehind);
+        if(getAverageTickSum()>2.0f || getAverageTickSum() < -2.0f){
+            newQueueRequired=true;
+        }
+        //Debug.Log("ticks behind:" + ticksBehind.ToString() + " average: " + getAverageTickSum().ToString("0.0"));
     }
 
     private bool[] GetFromQueue(){
-        Debug.Log("getting from queue on client-tick: "+ clientTick.ToString()  +"  bottomOfQueueTick: " + MyQueue.Peek().Item2.ToString());
-        if(MyQueue.Peek().Item2==clientTick){
+        if(MyQueue.Count!=0 && MyQueue.Peek().Item2==clientTick){
             return Tools.ByteToBools(MyQueue.Dequeue().Item1);
         }
-        newQueueRequired = true;
         Debug.Log("need New Queue");
+        newQueueRequired = true;
         return new bool[] {false,false,false,false};
     }
 
-    private void MoveWithInputs(Vector3 newPosition, byte[] inputss, ushort tick_){
+    private void MoveWithInputs(Vector3 newPosition, byte[] inputss, int tick_){
         AddToQueue(inputss,tick_);
-        
+        //reference cube is the current position
         normalCube.position = newPosition;
+        //we can also lerp reference cube
+        //normalCube.position = Vector3.Lerp(normalCube.position,newPosition,lerpAmount * Time.fixedDeltaTime);
         /*
         if(inputss[4]){
             gameObject.GetComponent<Rigidbody>().AddForce(Vector3.up * jumpSpeed);
@@ -107,14 +146,17 @@ public class Player : MonoBehaviour{
         */
     }
 
-    private void MoveWithPos(Vector3 pos, Vector3 vel,ushort tck){
+    private void MoveWithPos(Vector3 pos, Vector3 vel,int tck){
         latencyStorePos = pos;
         latencyStoreVel = vel;
         executeOnTick = tck;
     }
 
     private void MoveWithPosLatencyIncluded(){
-        lerpCube.gameObject.transform.position = latencyStorePos;
+        //Moves it instantly = more accurate
+        //lerpCube.position = latencyStorePos;
+        //Lerps it, smoother, but inaccuracy between simulation and whats shown
+        lerpCube.position = Vector3.Lerp(lerpCube.position,latencyStorePos,lerpAmount * Time.fixedDeltaTime);
         lerpCube.gameObject.GetComponent<Rigidbody>().velocity = latencyStoreVel;
     }
 
@@ -145,7 +187,7 @@ public class Player : MonoBehaviour{
         if(list.TryGetValue(message.GetUShort(), out Player player)){
             Vector3 _position = message.GetVector3();
             byte[] _inp = message.GetBytes(5);
-            ushort _tick = message.GetUShort();
+            int _tick = message.GetInt();
             player.MoveWithInputs(_position,_inp, _tick);
         }
     }
@@ -155,9 +197,8 @@ public class Player : MonoBehaviour{
         if(list.TryGetValue(message.GetUShort(), out Player player)){
             Vector3 _position = message.GetVector3();
             Vector3 _velocity = message.GetVector3();
-            ushort _tick = message.GetUShort();
+            int _tick = message.GetInt();
             player.MoveWithPos(_position, _velocity,_tick);
-            Debug.Log($"(0.5s pos update T: {_tick}");
         }
     }
 }

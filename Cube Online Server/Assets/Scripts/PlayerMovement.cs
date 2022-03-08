@@ -9,7 +9,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Player player;
     [SerializeField] private float movementSpeed;
     [SerializeField] private float jumpSpeed = 500f;
-    //[SerializeField] bool latencyOn = true;
+    [SerializeField] bool latencyOn = true;
 
     private float moveSpeed;
 
@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody rb;
 
     private Buffer buffer = new Buffer();
-    private LagSimulator lagSim = new LagSimulator(0f,0f,0.25f);
+    private LagSimulator lagSim = new LagSimulator(0f,0f,0.5f);
 
     private void OnValidate(){
         if(player == null){
@@ -36,13 +36,16 @@ public class PlayerMovement : MonoBehaviour
     }
 
     private void FixedUpdate(){
-        buffer.incrementTick();
         buffer.addInput(Tools.BoolsToByte(inputs));
-
         Move(inputs);
-        SendMovement(buffer.getBuffer());
-        if(buffer.getPosTick()==25){
-            buffer.setPosTick(0);
+        if(latencyOn){
+            if(!lagSim.CheckPacketLoss()){
+                SendMovement(buffer.getBuffer());
+            }
+        }else{
+            SendMovement(buffer.getBuffer());
+        }
+        if(NetworkManager.Singleton.serverTick%25==0){
             SendMovementPos();
         }
     }
@@ -78,7 +81,8 @@ public class PlayerMovement : MonoBehaviour
         message.AddUShort(player.Id);
         message.AddVector3(transform.position);
         message.AddBytes(inputs,false);
-        message.AddUShort(buffer.getTick());
+        message.AddInt(NetworkManager.Singleton.serverTick);
+        Debug.Log(message.Bytes.Length);
         NetworkManager.Singleton.Server.SendToAll(message);
     }
 
@@ -87,9 +91,7 @@ public class PlayerMovement : MonoBehaviour
         message.AddUShort(player.Id);
         message.AddVector3(transform.position);
         message.AddVector3(rb.velocity);
-        message.AddUShort(buffer.getTick());
+        message.AddInt(NetworkManager.Singleton.serverTick);
         NetworkManager.Singleton.Server.SendToAll(message);
     }
-
-    //todo move ticks to networkmanager so they are global, keep only input bytes here
 }

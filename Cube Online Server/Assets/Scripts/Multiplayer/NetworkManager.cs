@@ -35,7 +35,7 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private ushort port;
     [SerializeField] private ushort maxClientCount;
 
-    public int tickN = 0;
+    public int serverTick {get; private set;}
 
     private void Awake(){
         Singleton = this;
@@ -47,11 +47,12 @@ public class NetworkManager : MonoBehaviour
         Server = new Server();
         Server.Start(port,maxClientCount);
         Server.ClientDisconnected += PlayerLeft;
+        serverTick = 1;
     }
 
     private void FixedUpdate(){
         Server.Tick();
-        tickN++;
+        serverTick++;
     }
 
     private void OnApplicationQuit(){
