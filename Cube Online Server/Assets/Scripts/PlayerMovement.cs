@@ -82,7 +82,7 @@ public class PlayerMovement : MonoBehaviour
         message.AddVector3(transform.position);
         message.AddBytes(inputs,false);
         message.AddInt(NetworkManager.Singleton.serverTick);
-        Debug.Log(message.Bytes.Length);
+        Debug.Log(message.WrittenLength.ToString());
         NetworkManager.Singleton.Server.SendToAll(message);
     }
 

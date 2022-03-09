@@ -45,6 +45,7 @@ public class Player : MonoBehaviour{
     private void FixedUpdate(){
         if (newQueueRequired)
             needToMoveToPos=true;
+        //most important function
         clientTick++;
 
         if(clientTick==executeOnTick){
@@ -104,9 +105,6 @@ public class Player : MonoBehaviour{
             int delta = (t-newestTick);
             if(delta>5 || delta <1){
                 return;
-            }else if (delta==1){
-                MyQueue.Enqueue((inputss[0],t));
-                newestTick = t;
             }else{
                 for(int i=delta-1; i>-1; i--){
                     MyQueue.Enqueue((inputss[i],(t-i)));
