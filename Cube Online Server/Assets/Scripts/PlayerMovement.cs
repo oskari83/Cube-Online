@@ -19,7 +19,7 @@ public class PlayerMovement : MonoBehaviour
     private Rigidbody rb;
 
     private Buffer buffer = new Buffer();
-    private LagSimulator lagSim = new LagSimulator(0f,0f,0.5f);
+    private LagSimulator lagSim = new LagSimulator(0f,0f,0.1f);
 
     private void OnValidate(){
         if(player == null){
@@ -72,26 +72,15 @@ public class PlayerMovement : MonoBehaviour
     } 
 
     public void SetInput(bool[] inputs){
-        Debug.Log(Tools.BoolsToString(inputs));
+        //Debug.Log(Tools.BoolsToString(inputs));
         this.inputs = inputs;
     }
 
     private void SendMovement(byte[] inputs){
-        Message message = Message.Create(MessageSendMode.unreliable, ServerToClientId.playerMovement);
-        message.AddUShort(player.Id);
-        message.AddVector3(transform.position);
-        message.AddBytes(inputs,false);
-        message.AddInt(NetworkManager.Singleton.serverTick);
-        Debug.Log(message.WrittenLength.ToString());
-        NetworkManager.Singleton.Server.SendToAll(message);
+        NetworkManager.Singleton.InputSendBatchQueue.Enqueue(new object [] {player.Id,transform.position,inputs});
     }
 
     private void SendMovementPos(){
-        Message message = Message.Create(MessageSendMode.unreliable, ServerToClientId.playerMovementPos);
-        message.AddUShort(player.Id);
-        message.AddVector3(transform.position);
-        message.AddVector3(rb.velocity);
-        message.AddInt(NetworkManager.Singleton.serverTick);
-        NetworkManager.Singleton.Server.SendToAll(message);
+        NetworkManager.Singleton.PositionSendBatchQueue.Enqueue(new object [] {player.Id,transform.position,rb.velocity});
     }
 }

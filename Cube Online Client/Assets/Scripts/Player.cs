@@ -182,21 +182,43 @@ public class Player : MonoBehaviour{
 
     [MessageHandler((ushort)ServerToClientId.playerMovement)]
     private static void PlayerMovement(Message message){
+        int _tick = message.GetInt();
+        byte _len = message.GetByte();
+        for(int i=0; i<_len;i++){
+            if(list.TryGetValue(message.GetUShort(), out Player player)){
+                Vector3 _position = message.GetVector3();
+                byte[] _inp = message.GetBytes(5);
+                player.MoveWithInputs(_position,_inp, _tick);
+            }
+        }
+        /*
         if(list.TryGetValue(message.GetUShort(), out Player player)){
             Vector3 _position = message.GetVector3();
             byte[] _inp = message.GetBytes(5);
             int _tick = message.GetInt();
             player.MoveWithInputs(_position,_inp, _tick);
         }
+        */
     }
 
     [MessageHandler((ushort)ServerToClientId.playerMovementPos)]
     private static void PlayerMovementPos(Message message){
+        int _tick = message.GetInt();
+        byte _len = message.GetByte();
+         for(int i=0; i<_len;i++){
+            if(list.TryGetValue(message.GetUShort(), out Player player)){
+                Vector3 _position = message.GetVector3();
+                Vector3 _velocity = message.GetVector3();
+                player.MoveWithPos(_position, _velocity,_tick);
+            }
+        }
+        /*
         if(list.TryGetValue(message.GetUShort(), out Player player)){
             Vector3 _position = message.GetVector3();
             Vector3 _velocity = message.GetVector3();
             int _tick = message.GetInt();
             player.MoveWithPos(_position, _velocity,_tick);
         }
+        */
     }
 }

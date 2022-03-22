@@ -22,11 +22,11 @@ public class PlayerController : MonoBehaviour{
     private void Update(){
         if(Input.GetKeyDown(KeyCode.W))
             inputs[0] = true;
-        if(Input.GetKeyDown(KeyCode.A))
+        if(Input.GetKeyDown(KeyCode.D))
             inputs[1] = true;
         if(Input.GetKeyDown(KeyCode.S))
             inputs[2] = true;
-        if(Input.GetKeyDown(KeyCode.D))
+        if(Input.GetKeyDown(KeyCode.A))
             inputs[3] = true;
     
         //if(Input.GetKeyDown(KeyCode.Space))
@@ -34,11 +34,11 @@ public class PlayerController : MonoBehaviour{
 
         if(Input.GetKeyUp(KeyCode.W))
             inputs[0] = false;
-        if(Input.GetKeyUp(KeyCode.A))
+        if(Input.GetKeyUp(KeyCode.D))
             inputs[1] = false;
         if(Input.GetKeyUp(KeyCode.S))
             inputs[2] = false;
-        if(Input.GetKeyUp(KeyCode.D))
+        if(Input.GetKeyUp(KeyCode.A))
             inputs[3] = false;
         //if(Input.GetKeyUp(KeyCode.Space))
             //inputs[4] = false;

@@ -1,5 +1,7 @@
 using RiptideNetworking;
 using RiptideNetworking.Utils;
+using System.Collections.Generic;
+using System;
 using UnityEngine;
 
 public enum ServerToClientId : ushort {
@@ -35,6 +37,9 @@ public class NetworkManager : MonoBehaviour
     [SerializeField] private ushort port;
     [SerializeField] private ushort maxClientCount;
 
+    public Queue<object[]> InputSendBatchQueue = new Queue<object[]>();
+    public Queue<object[]> PositionSendBatchQueue = new Queue<object[]>();
+
     public int serverTick {get; private set;}
 
     private void Awake(){
@@ -53,6 +58,8 @@ public class NetworkManager : MonoBehaviour
     private void FixedUpdate(){
         Server.Tick();
         serverTick++;
+        SendMovement();
+        SendMovementPos();
     }
 
     private void OnApplicationQuit(){
@@ -62,4 +69,38 @@ public class NetworkManager : MonoBehaviour
     private void PlayerLeft(object sender, ClientDisconnectedEventArgs e){
         Destroy(Player.list[e.Id].gameObject);
     }
+
+    private void SendMovement(){
+        Message message = Message.Create(MessageSendMode.unreliable, ServerToClientId.playerMovement);
+        message.AddInt(NetworkManager.Singleton.serverTick);
+        message.AddByte((byte)InputSendBatchQueue.Count);
+        foreach(object[] item in InputSendBatchQueue){
+            message.AddUShort((ushort)item[0]);
+            message.AddVector3((Vector3)item[1]);
+            message.AddBytes((byte[])item[2],false);
+        }
+        //message.AddUShort(player.Id);
+        //message.AddVector3(transform.position);
+        //message.AddBytes(inputs,false);
+        //message.AddInt(NetworkManager.Singleton.serverTick);
+        Server.SendToAll(message);
+        InputSendBatchQueue.Clear();
+    }
+
+    private void SendMovementPos(){
+        Message message = Message.Create(MessageSendMode.unreliable, ServerToClientId.playerMovementPos);
+        message.AddInt(NetworkManager.Singleton.serverTick);
+        message.AddByte((byte)PositionSendBatchQueue.Count);
+        foreach(object[] item in PositionSendBatchQueue){
+            message.AddUShort((ushort)item[0]);
+            message.AddVector3((Vector3)item[1]);
+            message.AddVector3((Vector3)item[2]);
+        }
+        //message.AddUShort(player.Id);
+        //message.AddVector3(transform.position);
+        //message.AddVector3(rb.velocity);
+        //message.AddInt(NetworkManager.Singleton.serverTick);
+        Server.SendToAll(message);
+        PositionSendBatchQueue.Clear();
+    }    
 }
